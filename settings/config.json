@@ -1,0 +1,5 @@
+{
+    "endpoints": {
+        "db": "http://localhost:8000"
+    }
+}
