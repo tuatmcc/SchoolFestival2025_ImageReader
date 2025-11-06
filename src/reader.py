@@ -1,3 +1,5 @@
+import copy
+import uuid
 import cv2
 from cv2.typing import MatLike
 from io import BytesIO
@@ -7,7 +9,6 @@ import requests
 from aruco import ArucoFinder
 from camera import Camera
 from image import ImageProcessor
-
 
 FRAME_WINDOW_NAME = "Frame"
 TRIMMED_WINDOW_NAME = "Trimmed"
@@ -22,24 +23,35 @@ class ImageReader:
         self.__finder = aruco_finder
         self.__BLACK_IMAGE = numpy.zeros((600, 800, 3), dtype=numpy.uint8)
         self.__trimmed_image: MatLike | None = None
+        self.__captured_image: MatLike | None = None
         self.__db = config.get("endpoints", {}).get("db", "http://localhost:8000")
 
     def __send_image(self, image: MatLike) -> None:
         if self.__debug:
             print("Debug mode: Skipping image upload")
+            # Save image locally for debugging
+            cv2.imwrite("debug_captured_image.png", image)
             return
 
         print("Uploading image to database...")
-        _, img_encoded = cv2.imencode(".jpg", image)
-        img_bytes = BytesIO(img_encoded.tobytes())
-        _ = requests.post(
-            f"{self.__db}/request",
-            files={"file": ("trimmed.jpg", img_bytes, "image/jpeg")},
-        )
-        _ = requests.post(
-            f"{self.__db}/upload/raw-image",
-            files={"file": ("raw.jpg", img_bytes, "image/jpeg")},
-        )
+        _, img_encoded = cv2.imencode(".png", image)
+        gen_buf = BytesIO(img_encoded.tobytes())
+        img_bytes = copy.deepcopy(gen_buf)
+        payload = {"user_id": str(uuid.uuid4())}
+        try:
+            _ = requests.post(
+                f"{self.__db}/request",
+                data=payload,
+                files={"file": ("image.png", gen_buf, "image/png")},
+            )
+            _ = requests.post(
+                f"{self.__db}/upload/raw-image",
+                data=payload,
+                files={"file": ("image.png", img_bytes, "image/png")},
+            )
+        except requests.RequestException as e:
+            print(f"Failed to upload image: {e}")
+            return
 
     def run(self) -> None:
         cv2.imshow(TRIMMED_WINDOW_NAME, self.__BLACK_IMAGE)
@@ -55,10 +67,12 @@ class ImageReader:
             elif pressing_key & 0xFF == ord("r"):
                 cv2.imshow(TRIMMED_WINDOW_NAME, self.__BLACK_IMAGE)
                 self.__trimmed_image = None
-            elif pressing_key & 0xFF == ord("s") and self.__trimmed_image is not None:
-                self.__send_image(self.__trimmed_image)
+                self.__captured_image = None
+            elif pressing_key & 0xFF == ord("s") and self.__captured_image is not None:
+                self.__send_image(self.__captured_image)
                 cv2.imshow(TRIMMED_WINDOW_NAME, self.__BLACK_IMAGE)
                 self.__trimmed_image = None
+                self.__captured_image = None
                 continue
 
             marker_positions = self.__finder.getMarkerPositions(frame)
@@ -92,6 +106,7 @@ class ImageReader:
             )
 
             if pressing_key & 0xFF == ord("c"):
+                self.__captured_image = processed_frame.copy()
                 processed_frame = cv2.putText(
                     processed_frame,
                     "Press 's' to send",

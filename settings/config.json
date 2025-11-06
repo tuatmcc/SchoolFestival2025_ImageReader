@@ -1,5 +1,5 @@
 {
     "endpoints": {
-        "db": "http://localhost:8000"
+        "db": "http://sahaqiel.iruma.arc:8002"
     }
 }
