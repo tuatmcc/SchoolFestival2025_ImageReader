@@ -1,5 +1,5 @@
 {
-    "endpoints": {
-        "db": "http://sahaqiel.iruma.arc:8002"
-    }
+  "endpoints": {
+    "db": "http://192.168.11.147:8001"
+  }
 }
