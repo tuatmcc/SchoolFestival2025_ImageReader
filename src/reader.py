@@ -94,23 +94,7 @@ class ImageReader:
                 width=width * 2,
                 height=height * 2,
             )
-
-            alpha = 1.1  # コントラスト係数（1.0=変化なし）
-            beta = 0.3  # 明るさオフセット（0〜1）
-            bright = numpy.clip((processed_frame * alpha) / 255 + beta, 0, 1)
-
-            gray = numpy.clip(numpy.mean(bright, axis=2), 0, 1)
-            mask_white = (gray > 0.8).astype(numpy.float32)  # 白寄り領域
-            # mask_white = cv2.GaussianBlur(mask_white, (15, 15), 0)
-            white_boost = bright + mask_white[..., None]
-            white_boost = numpy.clip(white_boost, 0, 1)
-
-            hsv = cv2.cvtColor(
-                (white_boost * 255).astype(numpy.uint8), cv2.COLOR_RGB2HSV
-            ).astype(numpy.float32)
-            hsv[:, :, 1] *= 1.1  # 彩度をあげる
-            hsv[:, :, 1] = numpy.clip(hsv[:, :, 1], 0, 255)
-            processed_frame = cv2.cvtColor(hsv.astype(numpy.uint8), cv2.COLOR_HSV2RGB)
+            processed_frame = ImageProcessor.filter(processed_frame, gain=1.1, bias=0.0)
 
             marked_frame = cv2.putText(
                 marked_frame,
