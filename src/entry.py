@@ -7,6 +7,12 @@ from reader import ImageReader
 
 parser = argparse.ArgumentParser(description="Run the FastAPI application.")
 parser.add_argument(
+    "-i",
+    "--input",
+    type=int,
+    default=0,
+)
+parser.add_argument(
     "-d",
     "--debug",
     action="store_true",
@@ -26,7 +32,7 @@ with open(args.config, "r") as f:
 
 if __name__ == "__main__":
     finder = ArucoFinder()
-    camera = Camera()
+    camera = Camera(args.input)
     reader = ImageReader(config, camera, finder, debug=args.debug)
 
     print("Starting image reader...")
