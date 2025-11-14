@@ -8,5 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
+.direnv
 
 debug_captured_image.png
