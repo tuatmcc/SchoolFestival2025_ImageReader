@@ -1,9 +1,5 @@
 {
   "endpoints": {
-<<<<<<< HEAD
     "db": "http://192.168.11.147:8001"
-=======
-    "db": "http://192.168.1.100:8001"
->>>>>>> parent of be6c0ac (edit filter)
   }
 }
