@@ -1,5 +1,5 @@
 {
   "endpoints": {
-    "db": "http://fes2025.upiscium.f5.si"
+    "db": "http://192.168.11.147:8001"
   }
 }
